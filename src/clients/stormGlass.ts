@@ -1,5 +1,5 @@
-import { AxiosStatic } from 'axios';
 import config, { IConfig } from 'config';
+import * as HTTPUtil from '@src/util/request';
 import {
   StormGlassPoint,
   StormGlassForecastResponse,
@@ -8,7 +8,7 @@ import {
 import {
   ClientRequestError,
   StormGlassResponseError,
-} from './stormGlass.errors';
+} from '@src/clients/stormGlass.errors';
 
 const stormGlassConfig: IConfig = config.get('App.resources.StormGlass');
 
@@ -20,7 +20,7 @@ export class StormGlass {
 
   readonly stormGlassAPIUrl = 'https://api.stormglass.io/v2';
 
-  constructor(protected request: AxiosStatic) {}
+  constructor(protected request = new HTTPUtil.Request()) {}
 
   public async fetchPoints(lat: number, lng: number): Promise<ForecastPoint[]> {
     try {
@@ -39,7 +39,7 @@ export class StormGlass {
 
       return this.normalizeResponse(response.data);
     } catch (err) {
-      if (err.response && err.response.status) {
+      if (HTTPUtil.Request.isRequestError(err)) {
         throw new StormGlassResponseError(
           `Error: ${JSON.stringify(err.response.data)} Code ${
             err.response.status
